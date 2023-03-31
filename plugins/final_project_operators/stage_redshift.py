@@ -13,11 +13,16 @@ class StageToRedshiftOperator(BaseOperator):
     def __init__(self,
                  conn_id: str,
                  table_name: str,
+                 json,
+                 data_source_s3,
                  *args, **kwargs):
 
         super(StageToRedshiftOperator, self).__init__(*args, **kwargs)
         self.conn_id=conn_id
         self.table_name=table_name
+        self.json=json
+        self.data_source_s3=data_source_s3
+
     
     def execute(self, context):
         self.log.info('Connected')
@@ -27,10 +32,10 @@ class StageToRedshiftOperator(BaseOperator):
         hook.run(SqlQueries.table_drop.format(self.table_name))
         if self.table_name=='staging_songs':
             hook.run(SqlQueries.staging_songs_table_create)
-            hook.run(SqlQueries.COPY_STAGING_SONGS_SQL.format(aws_connection.login,aws_connection.password))
+            hook.run(SqlQueries.COPY_SQL.format(self.table_name,self.data_source_s3,self.json,aws_connection.login,aws_connection.password))
         elif self.table_name=='staging_events':
             hook.run(SqlQueries.staging_events_table_create)
-            hook.run(SqlQueries.COPY_STAGING_EVENTS_SQL.format(aws_connection.login,aws_connection.password))
+            hook.run(SqlQueries.COPY_SQL.format(self.table_name,self.data_source_s3,self.json,aws_connection.login,aws_connection.password))
         else:
             self.log.info('The table name that you provided is not in our Database')
         

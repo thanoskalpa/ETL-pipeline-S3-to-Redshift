@@ -137,27 +137,18 @@ INSERT INTO time
      COPY {}
      FROM '{}'
      JSON '{}'
-     ACCESS_KEY_ID '{{}}'
-     SECRET_ACCESS_KEY '{{}}'
+     ACCESS_KEY_ID '{}'
+     SECRET_ACCESS_KEY '{}'
      REGION 'us-west-2'
     """)
 
-    COPY_STAGING_EVENTS_SQL = COPY_SQL.format(
-     "staging_events",
-     's3://udacity-dend/log_data',
-     's3://udacity-dend/log_json_path.json'
-    )
+    
 
 
-     
-     
-    COPY_STAGING_SONGS_SQL = COPY_SQL.format(
-     "staging_songs",
-     "s3://udacity-dend/song_data/A",
-     'auto'
-    )
-
-
+    data_quality_checks=[{'check_sql':"SELECT COUNT(*) FROM users WHERE userid IS NULL",'expected_result':0},
+    {'check_sql':"SELECT COUNT(*) FROM song WHERE song_id IS NULL",'expected_result':0},
+    {'check_sql':"SELECT COUNT(*) FROM artist WHERE artist_id IS NULL",'expected_result':0},
+    {'check_sql':"SELECT COUNT(*) FROM time WHERE ts IS NULL",'expected_result':0}]
 
 
     tables_dictionary={'songplaycreate':songplay_table_create,'songplayinsert':songplay_table_insert,

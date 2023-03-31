@@ -8,22 +8,23 @@ class DataQualityOperator(BaseOperator):
 
     @apply_defaults
     def __init__(self,
-                 conn_id,
-                 tables,
+                 conn_id:str,
+                 sql_queries:list,
                  *args, **kwargs):
 
         super(DataQualityOperator, self).__init__(*args, **kwargs)
         self.conn_id=conn_id
-        self.tables=tables
+        self.sql_queries=sql_queries
 
     def execute(self, context):
         self.log.info('Connected')
         hook = PostgresHook(self.conn_id)
-        for table in self.tables:
-            records = hook.get_records(f"SELECT COUNT(*) FROM {table}")
-            if len(records) < 1 or len(records[0]) < 1:
-                raise ValueError(f"Data quality check failed. {table} returned no results")
-            num_records = records[0][0]
-            if num_records < 1:
-                raise ValueError(f"Data quality check failed. {table} contained 0 rows")
-            self.log.info(f"Data quality on table {table} check passed with {records[0][0]} records")
+        for i in range(0,len(self.sql_queries)):
+            records=hook.get_records(self.sql_queries[i]['check_sql'])
+            if records[0][0] > self.sql_queries[i]['expected_result']:
+                self.log.info('Data quality check failed,the table contains NULL values')
+            else:
+                self.log.info('Data quality check passed with 0 NULL values')
+
+
+

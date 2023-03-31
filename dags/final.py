@@ -7,10 +7,11 @@ from final_project_operators.stage_redshift import StageToRedshiftOperator
 from final_project_operators.load_fact import LoadFactOperator
 from final_project_operators.load_dimension import LoadDimensionOperator
 from final_project_operators.data_quality import DataQualityOperator
+from final_project_sql_statements import SqlQueries
 from airflow.models.baseoperator import chain
 import datetime
 
-tables_list=['staging_events','staging_songs','songplay','users','song','time','artist']
+
 
 default_args = {
     'owner': 'udacity',
@@ -22,6 +23,7 @@ default_args = {
 
 @dag(
     default_args=default_args,
+    schedule_interval='@hourly',
     description='Load and transform data in Redshift with Airflow',
     catchup=False
 )
@@ -32,13 +34,17 @@ def final_project():
     stage_events_to_redshift = StageToRedshiftOperator(
         task_id='Stage_events',
         conn_id='redshift',
-        table_name='staging_events'
+        table_name='staging_events',
+        data_source_s3='s3://udacity-dend/log_data',
+        json='s3://udacity-dend/log_json_path.json'
     )
 
     stage_songs_to_redshift = StageToRedshiftOperator(
           task_id='Stage_songs',
           conn_id='redshift',
-          table_name='staging_songs'
+          table_name='staging_songs',
+          data_source_s3='s3://udacity-dend/song_data/A/A/A',
+          json='auto'
     )
 
     
@@ -79,7 +85,7 @@ def final_project():
     run_quality_checks = DataQualityOperator(
         task_id='Run_data_quality_checks',
         conn_id='redshift',
-        tables=tables_list
+        sql_queries=SqlQueries.data_quality_checks
     )
 
     
